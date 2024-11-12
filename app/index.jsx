@@ -1,21 +1,31 @@
-import React, { useEffect } from "react";
-import useGlobalContext from "@/context/GlobalProvider";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { registerIndieID } from "native-notify";
+import LoadingScreen from "@/components/LoadingScreen";
+import useGlobalContext from "@/context/GlobalProvider";
 import { remove } from "@/lib/SecureStore/SecureStore";
-import { ActivityIndicator, View } from "react-native";
 
+// Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
+const APP_ID = 23374;
+const APP_TOKEN = "hZawrJYXBzBbQZgTgLVsZP";
+
 export default function Index() {
-  const { isLoggedIn, isLoading } = useGlobalContext();
+  // registerNNPushToken(23374, "hZawrJYXBzBbQZgTgLVsZP");
+  const { isLoggedIn, isLoading, user } = useGlobalContext();
   const router = useRouter();
 
   useEffect(() => {
     const handleNavigationAndSplash = async () => {
+      console.log({ user });
+
       try {
-        if (!isLoading) {
+        if (!isLoading && user) {
           if (isLoggedIn) {
+            const regis = await registerIndieID(user.email, APP_ID, APP_TOKEN);
+            // console.log(user.email, { regis, user, APP_ID, APP_TOKEN });
             router.replace("Home");
           } else {
             router.replace("signin");
@@ -30,24 +40,14 @@ export default function Index() {
       }
     };
 
-    // Call navigation function when the component is mounted
-    handleNavigationAndSplash();
-
-    // Add a timeout as a fallback in case of unforeseen delays
-    const timeoutId = setTimeout(() => {
-      if (!isLoading) {
-        isLoggedIn ? router.replace("Home") : router.replace("signin");
-        SplashScreen.hideAsync();
-      }
-    }, 1000); // 5 seconds fallback
-
-    // Clear timeout if component is unmounted or if navigation completes
-    return () => clearTimeout(timeoutId);
+    if (!isLoading) {
+      handleNavigationAndSplash();
+    }
   }, [isLoggedIn, isLoading, router]);
 
-  return (
-    <View className="flex-1 items-center align-middle justify-center">
-      <ActivityIndicator />
-    </View>
-  );
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  return <LoadingScreen />;
 }

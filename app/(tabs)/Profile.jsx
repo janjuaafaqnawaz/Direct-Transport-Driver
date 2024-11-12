@@ -6,7 +6,7 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
-  TouchableOpacity,
+  Alert,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as ImagePicker from "expo-image-picker";
@@ -16,12 +16,13 @@ import { icons } from "@/constants";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { uploadImages, updateBooking } from "@/lib/firebase/functions/post";
+import { unregisterIndieDevice } from "native-notify";
 
 const img = "https://cdn-icons-png.flaticon.com/512/4128/4128176.png";
 const resetPasswordLink = "https://dts.courierssydney.com.au/ResetPassword";
 
 const Profile = () => {
-  const { user, setIsLoggedIn } = useGlobalContext();
+  const { user, setIsLoggedIn, refreshContext } = useGlobalContext();
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -37,8 +38,15 @@ const Profile = () => {
 
   const handleSignOut = async () => {
     try {
+      const res = unregisterIndieDevice(
+        user.email,
+        23374,
+        "hZawrJYXBzBbQZgTgLVsZP"
+      );
+      console.log({ res });
+
       await signOut();
-      setIsLoggedIn(false);
+      // setIsLoggedIn(false);
       router.push("signin");
     } catch (error) {
       console.error("Error signing out:", error);
